@@ -3,18 +3,18 @@ import { TwitterFollowCard } from './TwitterFollowCard.jsx'
 
 const users = [
     {
-      userName: 'midudev',
-      name: 'Miguel Ángel Durán',
+      userName: 'trinidad',
+      name: 'Daiana Trinidad Puig',
       isFollowing: true
     },
     {
-      userName: 'pheralb',
-      name: 'Pablo H.',
+      userName: 'sebastian',
+      name: 'Sebastian Pondilo ',
       isFollowing: false
     },
     {
-      userName: 'PacoHdezs',
-      name: 'Paco Hdez',
+      userName: 'nico',
+      name: 'Nicolas Hernandez',
       isFollowing: true
     },
     {
