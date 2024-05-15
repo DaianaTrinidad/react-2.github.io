@@ -7,3 +7,7 @@
 ## Objetivos
 Con React, se creó un componente con un estado inicial y luego con el uso de useState, ese estado va cambiando de acuerdo a si seguimos o no a una persona en la aplicacion X.
 
+## Para correr el proyecto debe:
+* Entrar a la carpeta projects
+* Entrar a la carpeta vite-projects
+* npm run dev
