@@ -2,57 +2,69 @@ pipeline {
     agent any
 
     environment {
-        ECR = "exis-app"
-    
+        ECR = "339712971762.dkr.ecr.us-east-1.amazonaws.com/exis-app"
+        AWS_REGION = "us-east-1"
     }
 
     stages {
-        stage('init') {
-            agent{
-                docker {
-                    image 'node:xis-app'
-                    arg '-u root:root'
-                }
-            }
+        stage('Checkout') {
             steps {
-                sh 'npm install'
+                git 'https://github.com/DaianaTrinidad/react-2.github.io.git'
             }
         }
         
-        stage('test') {
-            agent{
-                docker {
-                    image 'node:xis-app'
-                    arg '-u root:root'
-                }
-            }
+        stage('Install Dependencies') {
             steps {
-                sh 'npm run test'
+                script {
+                    docker.image('node:18').inside {
+                        sh 'npm install'
+                    }
+                }
             }
         }
         
-        stage('build') {
-            agent{
-                docker {
-                    image 'node:xis-app'
-                    arg '-u root:root'
-                }
-            }
+        stage('Test') {
             steps {
-                sh 'npm run build'
-    
+                script {
+                    docker.image('node:18').inside {
+                        sh 'npm run test'
+                    }
+                }
             }
         }
         
-        stage('deploy') {
+        stage('Build') {
             steps {
-                withAWS(credentials: 'aws-trinidad', region: 'us-east-1') {
-                    sh 'aws ecr sync . ecr://$repositorio --exclude ".git/*'
-                    sh 'aws s3 ls ecr://$repositorio'
+                script {
+                    docker.image('node:18').inside {
+                        sh 'npm run build'
+                    }
+                }
+            }
+        }
+        
+        stage('Login to ECR') {
+            steps {
+                script {
+                    withAWS(credentials: 'aws-trinidad', region: AWS_REGION) {
+                        sh 'aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR'
+                    }
+                }
+            }
+        }
+        
+        stage('Push Docker Image to ECR') {
+            steps {
+                script {
+                    docker.build("xis-app").push("latest")
                 }
             }
         }
     }
-    
-    
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
 }
