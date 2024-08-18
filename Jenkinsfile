@@ -1,7 +1,7 @@
 pipeline {
     agent any
 
-        environment {
+    environment {
         // Variables de entorno
         DOCKER_IMAGE_NAME = 'xis-app' // Nombre de la imagen Docker existente
         AWS_REGION = 'us-east-1' // Región de AWS
@@ -9,13 +9,12 @@ pipeline {
         ECR_LOGIN_URL = "339712971762.dkr.ecr.us-east-1.amazonaws.com"
     }
 
-   
     stages {
         stage('Login to ECR') {
             steps {
                 script {
-                    // Login a AWS ECR
-                    sh '''
+                    // Login a AWS ECR para Windows
+                    bat '''
                     aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_LOGIN_URL}
                     '''
                 }
@@ -25,8 +24,8 @@ pipeline {
         stage('Tag Docker Image') {
             steps {
                 script {
-                    // Etiquetar la imagen Docker para ECR
-                    sh "docker tag ${DOCKER_IMAGE_NAME}:latest ${ECR_REPOSITORY}:latest"
+                    // Etiquetar la imagen Docker para ECR en Windows
+                    bat "docker tag ${DOCKER_IMAGE_NAME}:latest ${ECR_REPOSITORY}:latest"
                 }
             }
         }
@@ -34,8 +33,8 @@ pipeline {
         stage('Push Docker Image to ECR') {
             steps {
                 script {
-                    // Subir la imagen a ECR
-                    sh "docker push ${ECR_REPOSITORY}:latest"
+                    // Subir la imagen a ECR en Windows
+                    bat "docker push ${ECR_REPOSITORY}:latest"
                 }
             }
         }
