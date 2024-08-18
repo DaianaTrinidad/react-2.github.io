@@ -2,61 +2,66 @@ pipeline {
     agent any
 
     environment {
-        ECR = "339712971762.dkr.ecr.us-east-1.amazonaws.com/exis-app"
-        AWS_REGION = "us-east-1"
+        ECR = "exis-app"
+        DOCKER_IMAGE = "node:18" // Usa una imagen base adecuada desde Docker Hub
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'develop', url: 'https://github.com/DaianaTrinidad/react-2.github.io.git'
+                checkout scm
             }
         }
-        
+
         stage('Install Dependencies') {
             steps {
                 script {
-                    docker.image('node:18').inside {
+                    docker.image(DOCKER_IMAGE).inside {
                         sh 'npm install'
                     }
                 }
             }
         }
-        
+
         stage('Test') {
             steps {
                 script {
-                    docker.image('node:18').inside {
+                    docker.image(DOCKER_IMAGE).inside {
                         sh 'npm run test'
                     }
                 }
             }
         }
-        
+
         stage('Build') {
             steps {
                 script {
-                    docker.image('node:18').inside {
+                    docker.image(DOCKER_IMAGE).inside {
                         sh 'npm run build'
                     }
                 }
             }
         }
-        
-        stage('Login to ECR') {
+
+        stage('Login to Docker Hub') {
             steps {
-                script {
-                    withAWS(credentials: 'aws-trinidad', region: AWS_REGION) {
-                        sh 'aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR'
+                withDockerRegistry([credentialsId: 'dockerhub-credentials', url: 'https://index.docker.io/v1/']) {
+                    script {
+                        docker.image(DOCKER_IMAGE).inside {
+                            sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD'
+                        }
                     }
                 }
             }
         }
-        
-        stage('Push Docker Image to ECR') {
+
+        stage('Push Docker Image') {
             steps {
                 script {
-                    docker.build("xis-app").push("latest")
+                    docker.image(DOCKER_IMAGE).inside {
+                        sh 'docker build -t $DOCKER_USERNAME/$ECR:latest .'
+                        sh 'docker push $DOCKER_USERNAME/$ECR:latest'
+                    }
                 }
             }
         }
@@ -68,4 +73,3 @@ pipeline {
         }
     }
 }
-
