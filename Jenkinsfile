@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/DaianaTrinidad/react-2.github.io.git'
+                git branch: 'develop', url: 'https://github.com/DaianaTrinidad/react-2.github.io.git'
             }
         }
         
@@ -68,3 +68,4 @@ pipeline {
         }
     }
 }
+
