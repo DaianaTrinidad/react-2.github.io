@@ -2,50 +2,57 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE_NAME = 'xis-app'
-        AWS_REGION = 'us-east-1'
-        ECR_REPOSITORY = '339712971762.dkr.ecr.us-east-1.amazonaws.com/exis-app'
-        ECR_LOGIN_URL = '339712971762.dkr.ecr.us-east-1.amazonaws.com'
-         AWS_CREDENTIALS_ID = 'aws-trinidad'
+        ECR = "exis-app"
+    
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        
-        stage('Login to ECR') {
-            steps {
-                bat '''
-                aws ecr get-login-password --region %AWS_REGION% | docker login --username AWS --password-stdin %ECR_LOGIN_URL%
-                '''
-            }
-        }
-        
-        stage('Tag Docker Image') {
-            steps {
-                script {
-                    
-                    bat "docker tag ${DOCKER_IMAGE_NAME}:latest ${ECR_REPOSITORY}:latest"
+        stage('init') {
+            agent{
+                docker {
+                    image 'node:xis-app'
+                    arg '-u root:root'
                 }
             }
+            steps {
+                sh 'npm install'
+            }
         }
         
-        stage('Push Docker Image to ECR') {
+        stage('test') {
+            agent{
+                docker {
+                    image 'node:xis-app'
+                    arg '-u root:root'
+                }
+            }
             steps {
-                script {
-                
-                    bat "docker push ${ECR_REPOSITORY}:latest"
+                sh 'npm run test'
+            }
+        }
+        
+        stage('build') {
+            agent{
+                docker {
+                    image 'node:xis-app'
+                    arg '-u root:root'
+                }
+            }
+            steps {
+                sh 'npm run build'
+    
+            }
+        }
+        
+        stage('deploy') {
+            steps {
+                withAWS(credentials: 'aws-trinidad', region: 'us-east-1') {
+                    sh 'aws ecr sync . ecr://$repositorio --exclude ".git/*'
+                    sh 'aws s3 ls ecr://$repositorio'
                 }
             }
         }
     }
     
-    post {
-        always {
-            cleanWs()
-        }
-    }
+    
 }
