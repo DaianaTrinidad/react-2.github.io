@@ -3,17 +3,22 @@ pipeline {
 
     environment {
         ECR = "exis-app"
-
     }
 
     stages {
-        stage('deploy to ECR') {
+        stage('Deploy to ECR') {
             steps {
-                withAWS(credentials 'aws-trinidad', region: 'us-east-1'){
-                    bat 'aws ecr sync ecr://$ecr --exclude ".git/*"'
-                    bat 'aws ecr ls ecr://$ecr'
+                withAWS(credentials: 'aws-trinidad', region: 'us-east-1') {
+                    bat 'aws ecr sync ecr://%ECR% --exclude ".git/*"'
+                    bat 'aws ecr ls ecr://%ECR%'
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
         }
     }
 }
